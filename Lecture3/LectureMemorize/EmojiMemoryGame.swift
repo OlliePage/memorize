@@ -3,24 +3,31 @@
 //  LectureMemorize
 //
 //  view model
-//
-//  Created by sun on 2021/09/28.
+//  View models are for expressing intents. ContentView should only reference ViewModel intents with verbs, e.g choose
 //
 
 import Foundation
 
-class EmojiMemoryGame {
+class EmojiMemoryGame: ObservableObject {
     static let emojis = ["🚗", "🛴", "✈️", "🛵", "⛵️", "🚎", "🚐", "🚛", "🛻", "🏎", "🚂", "🚊", "🚀", "🚁", "🚢", "🛶", "🛥", "🚞", "🚟", "🚃"]
     
     static func createMemoryGame() -> MemoryGame<String> {
-        MemoryGame(numberOfPairsOfCards: 4) { pairIndex in emojis[pairIndex] }
+        MemoryGame(numberOfPairsOfCards: 3) { pairIndex in emojis[pairIndex] }
     }
     
+    
+    
     // each Model-View creates its own Model
-    private(set) var model = createMemoryGame()
+    @Published private(set) var model = createMemoryGame()
     
     // and make public, parts that need to be so
     var cards: [MemoryGame<String>.Card] {
         return model.cards
+    }
+    
+    // MARK - Intent(s)
+    
+    func choose(_ card: MemoryGame<String>.Card) {
+        model.choose(card)
     }
 }
