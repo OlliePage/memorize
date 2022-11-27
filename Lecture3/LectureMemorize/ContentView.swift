@@ -11,24 +11,53 @@ struct ContentView: View {
     @ObservedObject var viewModel: EmojiMemoryGame
     
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 65))]) {
-                ForEach(viewModel.cards) { card in // bag of lego View!
-                    CardView(card: card)
-                        .aspectRatio(2/3, contentMode: .fit)
-                        .onTapGesture {
-                            viewModel.choose(card)
-                        }
+        VStack {
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 65))]) {
+                    ForEach(viewModel.cards) { card in // bag of lego View!
+                        CardView(card: card)
+                            .aspectRatio(2/3, contentMode: .fit)
+                            .onTapGesture {
+                                viewModel.choose(card)
+                            }
+                            .foregroundColor(viewModel.themeColor)
+                    }
                 }
             }
+            .foregroundColor(.blue)
+            .padding(.horizontal)
+            
+            Spacer()
+            Button {
+                viewModel.restartGame()
+            } label : {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .frame(maxHeight: 80)
+                        .padding(.all)
+                        .foregroundColor(.purple)
+                    HStack {
+                        VStack {
+                            Text("NEW GAME")
+                            Text("Current Theme: \(EmojiMemoryGame.theme.supportedTheme)")
+                                .font(.subheadline)
+                        }
+                        Text(" || Score \(viewModel.score)")
+                            .font(.subheadline)
+                    }
+                    .font(.largeTitle)
+                    .foregroundColor(Color.white)
+                    .padding(.all)
+                }
+                    
+            }
         }
-        .foregroundColor(viewModel.theme.color)
-        .padding(.horizontal)
     }
 }
 
 
 struct CardView: View {
+    
     let card: MemoryGame<String>.Card
     
     var body: some View {

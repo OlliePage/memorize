@@ -10,10 +10,55 @@
 import Foundation
 import SwiftUI
 
-struct MemoryGame<CardContent> where CardContent: Equatable {
-    private(set) var cards: [Card]
-    private(set) var theme: Theme
+struct Theme {
     
+    var supportedTheme: String {
+        switch name {
+        case .transport:
+            return "Transport"
+        case .earth:
+            return "Earth"
+        case .wind:
+            return "Wind"
+        case .fire:
+            return "Fire"
+        case .water:
+            return "Water"
+        case .space:
+            return "Space"
+        }
+    }
+    
+    enum themes: CaseIterable {
+    case transport, earth, wind, fire, water, space
+    }
+    
+    static let reference_emojis: [String:[String]] = ["Transport":  ["🚗", "🛴", "✈️", "🛵", "⛵️", "🚎", "🚐", "🚛"],
+                                                      "Earth": ["🌎", "🌞","🌳", "🥕","🪵"],
+                                                      "Wind": ["💨", "🍃","🎐", "🌬️","😮‍💨", "💨","🚁", "𐑺"],
+                                                      "Fire": ["🔥", "❤️‍🔥","🧯", "👨‍🚒","☄️", "🌞","🚒", "🕯️"],
+                                                      "Water": ["💦", "🔫","🎣", "🦆","🌊", "💧","🏄‍♂️", "🦈"],
+                                                      "Space": ["🔭", "🪐","🛸", "👽","🚀", "👩🏼‍🚀","👾", "🌏"]
+    ]
+    
+    static let reference_color: [String:String] = ["Transport":  "Grey",
+                                                      "Earth": "Green",
+                                                      "Wind": "Teal",
+                                                      "Fire": "Red",
+                                                      "Water": "Blue",
+                                                      "Space": "Black"
+    ]
+    
+    let name: themes
+    var cardPairs: Int
+    var color: String { return Theme.reference_color[supportedTheme]!}
+    var emojis: [String] { return Theme.reference_emojis[supportedTheme]!}
+    
+}
+
+struct MemoryGame<CardContent> where CardContent: Equatable {
+    private(set) var score: Int = 0
+    private(set) var cards: [Card]
     private var indexOfTheOneAndOnlyFaceUpCard: Int?
     
     mutating func choose(_ card: Card) {
@@ -24,7 +69,14 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
                 if cards[chosenIndex].content == cards[potentialMatch].content {
                     cards[chosenIndex].isMatched = true
                     cards[potentialMatch].isMatched = true
+                    score += 2
+                } else if cards[chosenIndex].previousSeen && cards[potentialMatch].previousSeen {
+                    score -= 2
+                } else if cards[chosenIndex].previousSeen || cards[potentialMatch].previousSeen {
+                    score -= 1
                 }
+                cards[chosenIndex].previousSeen = true
+                cards[potentialMatch].previousSeen = true
                 indexOfTheOneAndOnlyFaceUpCard = nil
             } else {
                 for index in cards.indices {
@@ -36,33 +88,19 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
             cards[chosenIndex].isFaceUp.toggle()
             
         }
-        print("Couldn't find card")
     }
     
-    
-    init(themeName: String, numberOfPairsOfCards: Int, createCardContent: (Int) -> CardContent) {
-        cards = []
+    init(numberOfPairsOfCards: Int, createCardContent: (Int) -> CardContent) {
+        
+        var unshuffledCards: [Card] = []
         // add numberOfPairsOfCards * 2 cards to cards array
         for pairIndex in 0..<numberOfPairsOfCards {
             let content = createCardContent(pairIndex)
-            cards.append(Card(content: content, id: pairIndex*2))
-            cards.append(Card(content: content, id: pairIndex*2+1))
+            unshuffledCards.append(Card(content: content, id: pairIndex*2))
+            unshuffledCards.append(Card(content: content, id: pairIndex*2+1))
         }
         
-        switch themeName {
-        case "fire":
-            self.theme = Theme(name: themeName, color: .red, numPairs: numberOfPairsOfCards)
-        case "wind":
-            self.theme = Theme(name: themeName, color: .cyan, numPairs: numberOfPairsOfCards)
-        case "earth":
-            self.theme = Theme(name: themeName, color: .brown, numPairs: numberOfPairsOfCards)
-        case "water":
-            self.theme = Theme(name: themeName, color: .blue, numPairs: numberOfPairsOfCards)
-        default:
-            self.theme = Theme(name: themeName, color: .white, numPairs: numberOfPairsOfCards)
-        }
-        //        self.theme = Theme(color: cardColor)
-        
+        self.cards = { return unshuffledCards.shuffled() }()
     }
     
     struct Card: Identifiable {
@@ -70,19 +108,6 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
         var isMatched: Bool = false
         var content: CardContent
         var id: Int
+        var previousSeen: Bool = false
     }
-    
-    struct Theme {
-        let emojiMap: [String: [String]] = ["fire": ["f", "i"],
-                                            "wind": ["💨", "i"],
-                                            "earth": ["e", "a"],
-                                            "water": ["🥶", "🏄‍♂️", "🏊", "🧊", "💦", "🌊", "🌨️", "🐟", "🐋", "🐳", "❄️"]]
-        
-        var name: String = ""
-        var color: Color
-        //        var emojis: String
-        var numPairs: Int
-        
-    }
-    
 }
